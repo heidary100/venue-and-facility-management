@@ -1,3 +1,5 @@
+# ⚠️ DEPRECATED → See [docs/FEATURES.md](./docs/FEATURES.md) § Map & Locator
+
 # Facility Map & Locator System - Phase 2
 
 ## ✅ Implemented Features

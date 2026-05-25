@@ -1,21 +1,22 @@
 import type { User, Venue, Booking, MaintenanceTask, DashboardKPIs, ReportData, VenueEvaluation, University, Notification, BookingPurpose } from './types';
 
-export const currentUser: User = {
-  id: '1',
-  name: 'علی احمدی',
-  email: 'ali.ahmadi@university.ac.ir',
-  role: 'admin_national',
-  avatar: '/avatars/user.jpg',
-};
-
 export const mockUniversities: University[] = [
-  { id: 'u1', name: 'University of Tehran', nameFa: 'دانشگاه تهران', city: 'تهران', province: 'تهران' },
-  { id: 'u2', name: 'Sharif University', nameFa: 'دانشگاه شریف', city: 'تهران', province: 'تهران' },
-  { id: 'u3', name: 'Amirkabir University', nameFa: 'دانشگاه امیرکبیر', city: 'تهران', province: 'تهران' },
-  { id: 'u4', name: 'Isfahan University', nameFa: 'دانشگاه اصفهان', city: 'اصفهان', province: 'اصفهان' },
-  { id: 'u5', name: 'Shiraz University', nameFa: 'دانشگاه شیراز', city: 'شیراز', province: 'فارس' },
-  { id: 'u6', name: 'Tabriz University', nameFa: 'دانشگاه تبریز', city: 'تبریز', province: 'آذربایجان شرقی' },
+  { id: 'u1', name: 'University of Tehran', nameFa: 'دانشگاه تهران', city: 'تهران', province: 'تهران', regionId: 'region_tehran' },
+  { id: 'u2', name: 'Sharif University', nameFa: 'دانشگاه شریف', city: 'تهران', province: 'تهران', regionId: 'region_tehran' },
+  { id: 'u3', name: 'Amirkabir University', nameFa: 'دانشگاه امیرکبیر', city: 'تهران', province: 'تهران', regionId: 'region_tehran' },
+  { id: 'u4', name: 'Isfahan University', nameFa: 'دانشگاه اصفهان', city: 'اصفهان', province: 'اصفهان', regionId: 'region_center' },
+  { id: 'u5', name: 'Shiraz University', nameFa: 'دانشگاه شیراز', city: 'شیراز', province: 'فارس', regionId: 'region_south' },
+  { id: 'u6', name: 'Tabriz University', nameFa: 'دانشگاه تبریز', city: 'تبریز', province: 'آذربایجان شرقی', regionId: 'region_northwest' },
 ];
+
+export const demoUsers: User[] = [
+  { id: '1', name: 'علی احمدی', email: 'ali.ahmadi@sports.gov.ir', role: 'admin_national', avatar: '/avatars/user.jpg' },
+  { id: '2', name: 'مریم رضایی', email: 'maryam@sports.gov.ir', role: 'admin_regional', regionId: 'region_tehran', avatar: '/avatars/user.jpg' },
+  { id: '3', name: 'حسین کریمی', email: 'hossein@tehran.ac.ir', role: 'university_manager', universityId: 'u1', regionId: 'region_tehran', avatar: '/avatars/user.jpg' },
+  { id: 'u4', name: 'سارا محمدی', email: 'sara@student.ac.ir', role: 'student', universityId: 'u1', avatar: '/avatars/user.jpg' },
+];
+
+export const currentUser: User = demoUsers[0];
 
 const defaultOperatingHours = [
   { day: 'Saturday', dayFa: 'شنبه', open: '06:00', close: '22:00', isOpen: true },

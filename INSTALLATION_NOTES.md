@@ -1,3 +1,5 @@
+# ⚠️ DEPRECATED → See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+
 # Installation Notes - Phase 2
 
 ## ⚠️ Manual Installation Required

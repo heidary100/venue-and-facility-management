@@ -19,12 +19,15 @@ import {
   Menu,
   X,
   Dumbbell,
+  FileSearch,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import type { UserRole } from "@/lib/types";
+import { fa } from "@/lib/i18n/fa";
+import { isStudentRole } from "@/lib/role-utils";
 
 interface NavItem {
   title: string;
@@ -38,21 +41,21 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     title: "Dashboard",
-    titleFa: "داشبورد",
+    titleFa: fa.nav.dashboard,
     href: "/dashboard",
     icon: <LayoutDashboard className="h-5 w-5" />,
-    roles: ["admin_national", "admin_regional", "university_manager", "facility_staff", "student", "athlete"],
+    roles: ["admin_national", "admin_regional", "university_manager", "facility_staff"],
   },
   {
     title: "Venues",
-    titleFa: "اماکن ورزشی",
+    titleFa: fa.nav.venues,
     href: "/venues",
     icon: <Building2 className="h-5 w-5" />,
     roles: ["admin_national", "admin_regional", "university_manager", "facility_staff", "student", "athlete"],
   },
   {
     title: "Bookings",
-    titleFa: "رزرو",
+    titleFa: fa.nav.bookings,
     href: "/bookings",
     icon: <Calendar className="h-5 w-5" />,
     badge: 5,
@@ -60,14 +63,14 @@ const navItems: NavItem[] = [
   },
   {
     title: "Map",
-    titleFa: "نقشه",
+    titleFa: fa.nav.map,
     href: "/map",
     icon: <Map className="h-5 w-5" />,
     roles: ["admin_national", "admin_regional", "university_manager", "facility_staff", "student", "athlete"],
   },
   {
     title: "Maintenance",
-    titleFa: "نگهداری",
+    titleFa: fa.nav.maintenance,
     href: "/maintenance",
     icon: <Wrench className="h-5 w-5" />,
     badge: 3,
@@ -75,21 +78,28 @@ const navItems: NavItem[] = [
   },
   {
     title: "Reports",
-    titleFa: "گزارش‌ها",
+    titleFa: fa.nav.reports,
     href: "/reports",
     icon: <BarChart3 className="h-5 w-5" />,
     roles: ["admin_national", "admin_regional", "university_manager"],
   },
   {
     title: "Users",
-    titleFa: "کاربران",
+    titleFa: fa.nav.users,
     href: "/users",
     icon: <Users className="h-5 w-5" />,
     roles: ["admin_national", "admin_regional"],
   },
   {
+    title: "Audit",
+    titleFa: fa.nav.audit,
+    href: "/audit",
+    icon: <FileSearch className="h-5 w-5" />,
+    roles: ["admin_national", "admin_regional"],
+  },
+  {
     title: "Settings",
-    titleFa: "تنظیمات",
+    titleFa: fa.nav.settings,
     href: "/settings",
     icon: <Settings className="h-5 w-5" />,
     roles: ["admin_national", "admin_regional", "university_manager"],
@@ -100,11 +110,30 @@ interface SidebarProps {
   userRole?: UserRole;
 }
 
+const studentNavItems: NavItem[] = [
+  {
+    title: "Bookings",
+    titleFa: fa.nav.bookings,
+    href: "/bookings",
+    icon: <Calendar className="h-5 w-5" />,
+    roles: ["student", "athlete"],
+  },
+  {
+    title: "Venues",
+    titleFa: fa.nav.venues,
+    href: "/venues",
+    icon: <Building2 className="h-5 w-5" />,
+    roles: ["student", "athlete"],
+  },
+];
+
 export function Sidebar({ userRole = "admin_national" }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = React.useState(false);
 
-  const filteredNavItems = navItems.filter((item) => item.roles.includes(userRole));
+  const filteredNavItems = isStudentRole(userRole)
+    ? studentNavItems
+    : navItems.filter((item) => item.roles.includes(userRole));
 
   return (
     <aside
@@ -203,7 +232,9 @@ export function MobileSidebar({ userRole = "admin_national" }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
 
-  const filteredNavItems = navItems.filter((item) => item.roles.includes(userRole));
+  const filteredNavItems = isStudentRole(userRole)
+    ? studentNavItems
+    : navItems.filter((item) => item.roles.includes(userRole));
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

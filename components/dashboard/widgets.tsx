@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { mockBookings, mockMaintenanceTasks, toPersianDigits } from "@/lib/mock-data";
+import type { MaintenanceTaskStatus, MaintenancePriority } from "@/lib/types";
 import Link from "next/link";
 
 const statusConfig = {
@@ -48,7 +49,10 @@ const statusConfig = {
   },
 };
 
-const maintenanceStatusConfig = {
+const maintenanceStatusConfig: Record<
+  MaintenanceTaskStatus,
+  { label: string; className: string }
+> = {
   scheduled: {
     label: "برنامه‌ریزی شده",
     className: "bg-blue-500/10 text-blue-500",
@@ -67,7 +71,10 @@ const maintenanceStatusConfig = {
   },
 };
 
-const priorityConfig = {
+const priorityConfig: Record<
+  MaintenancePriority,
+  { label: string; className: string }
+> = {
   low: { label: "کم", className: "bg-secondary text-secondary-foreground" },
   medium: { label: "متوسط", className: "bg-blue-500/10 text-blue-500" },
   high: { label: "بالا", className: "bg-yellow-500/10 text-yellow-500" },
@@ -200,7 +207,10 @@ export function MaintenanceAlerts() {
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    موعد: {new Date(task.scheduledDate).toLocaleDateString("fa-IR")}
+                    موعد:{" "}
+                    {task.scheduledDate
+                      ? new Date(task.scheduledDate).toLocaleDateString("fa-IR")
+                      : "—"}
                   </span>
                 </div>
               </div>

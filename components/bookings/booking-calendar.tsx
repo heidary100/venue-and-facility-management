@@ -44,7 +44,7 @@ const messages = {
   time: "زمان",
   event: "رویداد",
   noEventsInRange: "هیچ رزروی در این بازه زمانی وجود ندارد",
-  showMore: (total: number) => `+ ${total} بیشتر`,
+  showMore: (total: unknown) => `+ ${String(total)} بیشتر`,
 };
 
 export function BookingCalendar({
@@ -248,13 +248,17 @@ export function BookingCalendar({
         min={new Date(2024, 0, 1, 6, 0, 0)}
         max={new Date(2024, 0, 1, 23, 0, 0)}
         formats={{
-          dayFormat: (date, culture, localizer) =>
+          dayFormat: (date: Date, culture?: string, localizer?: { format: (d: Date, f: string, c?: string) => string }) =>
             localizer?.format(date, "EEEE", culture) || "",
-          dayHeaderFormat: (date, culture, localizer) =>
+          dayHeaderFormat: (date: Date, culture?: string, localizer?: { format: (d: Date, f: string, c?: string) => string }) =>
             localizer?.format(date, "dd MMMM", culture) || "",
-          timeGutterFormat: (date, culture, localizer) =>
+          timeGutterFormat: (date: Date, culture?: string, localizer?: { format: (d: Date, f: string, c?: string) => string }) =>
             localizer?.format(date, "HH:mm", culture) || "",
-          eventTimeRangeFormat: ({ start, end }, culture, localizer) =>
+          eventTimeRangeFormat: (
+            { start, end }: { start: Date; end: Date },
+            culture?: string,
+            localizer?: { format: (d: Date, f: string, c?: string) => string }
+          ) =>
             `${localizer?.format(start, "HH:mm", culture)} - ${localizer?.format(end, "HH:mm", culture)}`,
         }}
       />

@@ -1,43 +1,29 @@
+"use client";
+
+import { Suspense } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { DashboardKPIs } from "@/components/dashboard/kpi-cards";
-import { UtilizationChart, BookingsChart, VenueTypesChart } from "@/components/dashboard/charts";
-import { RecentBookings, MaintenanceAlerts, QuickActions } from "@/components/dashboard/widgets";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { PageLoader } from "@/components/ui/page-loader";
+import { Phase2Dashboard } from "@/components/dashboard/phase2-dashboard";
+import { StudentDashboard } from "@/components/dashboard/student-dashboard";
+import { useRoleAccess } from "@/components/role-guard";
+
+function DashboardContent() {
+  const { canAdminDashboard } = useRoleAccess();
+  if (!canAdminDashboard) {
+    return <StudentDashboard />;
+  }
+  return <Phase2Dashboard />;
+}
 
 export default function DashboardPage() {
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl md:text-3xl font-bold">داشبورد</h1>
-          <p className="text-muted-foreground">
-            خلاصه وضعیت اماکن ورزشی و شاخص‌های کلیدی عملکرد
-          </p>
-        </div>
-
-        {/* KPI Cards */}
-        <DashboardKPIs />
-
-        {/* Quick Actions */}
-        <QuickActions />
-
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <UtilizationChart />
-          <BookingsChart />
-        </div>
-
-        {/* Widgets Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <RecentBookings />
-          </div>
-          <div className="space-y-6">
-            <VenueTypesChart />
-            <MaintenanceAlerts />
-          </div>
-        </div>
-      </div>
+      <ErrorBoundary fallbackTitle="خطا در بارگذاری داشبورد">
+        <Suspense fallback={<PageLoader />}>
+          <DashboardContent />
+        </Suspense>
+      </ErrorBoundary>
     </DashboardLayout>
   );
 }

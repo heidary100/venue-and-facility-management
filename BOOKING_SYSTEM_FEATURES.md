@@ -1,3 +1,5 @@
+# ⚠️ DEPRECATED → See [docs/FEATURES.md](./docs/FEATURES.md) § Smart Booking
+
 # Smart Booking / Reservation System - Phase 2
 
 ## ✅ Implemented Features

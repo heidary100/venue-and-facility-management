@@ -795,7 +795,11 @@ function VenueDetailSheet({
                           <p className="text-sm text-muted-foreground">{task.description}</p>
                           <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                             <span>مسئول: {task.assignedTo}</span>
-                            <span>{formatPersianDate(task.scheduledDate)}</span>
+                            <span>
+                              {task.scheduledDate
+                                ? formatPersianDate(task.scheduledDate)
+                                : "—"}
+                            </span>
                           </div>
                         </div>
                       ))}

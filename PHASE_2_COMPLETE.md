@@ -1,3 +1,12 @@
+# ⚠️ DEPRECATED
+
+This file is superseded by the consolidated documentation package:
+
+- **Main:** [docs/PHASE2-DOCUMENTATION.md](./docs/PHASE2-DOCUMENTATION.md)
+- **Index:** [docs/README.md](./docs/README.md)
+
+---
+
 # Phase 2: Venue Management Module - COMPLETE ✅
 
 ## Overview

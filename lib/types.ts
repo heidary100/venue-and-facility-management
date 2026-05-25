@@ -1,11 +1,14 @@
 // User Roles
 export type UserRole = 'admin_national' | 'admin_regional' | 'university_manager' | 'facility_staff' | 'student' | 'athlete';
 
+export type RegionId = 'region_tehran' | 'region_center' | 'region_south' | 'region_northwest';
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  regionId?: RegionId;
   universityId?: string;
   avatar?: string;
 }
@@ -107,6 +110,7 @@ export interface Booking {
   rejectionReason?: string;
   createdAt: Date;
   updatedAt?: Date;
+  evaluationSubmitted?: boolean;
 }
 
 export interface TimeSlot {
@@ -144,9 +148,13 @@ export interface Notification {
 }
 
 // Maintenance Types
-export type MaintenanceStatus = 'scheduled' | 'in_progress' | 'completed' | 'overdue';
+export type MaintenanceStatus = 'reported' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'critical';
-export type MaintenanceType = 'preventive' | 'corrective' | 'emergency' | 'inspection';
+export type MaintenanceCategory = 'electrical' | 'plumbing' | 'hvac' | 'equipment' | 'structural' | 'cleaning' | 'safety' | 'other';
+
+// Legacy maintenance task (dashboard widgets)
+export type MaintenanceTaskStatus = 'scheduled' | 'in_progress' | 'completed' | 'overdue';
+export type MaintenanceTaskType = 'preventive' | 'corrective' | 'inspection';
 
 export interface MaintenanceTask {
   id: string;
@@ -155,14 +163,86 @@ export interface MaintenanceTask {
   title: string;
   titleFa: string;
   description: string;
-  type: MaintenanceType;
-  status: MaintenanceStatus;
+  type: MaintenanceTaskType;
+  status: MaintenanceTaskStatus;
   priority: MaintenancePriority;
-  assignedTo: string;
-  scheduledDate: Date;
+  assignedTo?: string;
+  scheduledDate?: Date;
   completedDate?: Date;
   cost?: number;
   createdAt: Date;
+}
+
+export interface MaintenanceRequest {
+  id: string;
+  venueId: string;
+  venueName: string;
+  category: MaintenanceCategory;
+  title: string;
+  description: string;
+  priority: MaintenancePriority;
+  status: MaintenanceStatus;
+  reportedBy: string;
+  reportedByName: string;
+  assignedTo?: string;
+  assignedToName?: string;
+  photos?: string[];
+  estimatedCost?: number;
+  actualCost?: number;
+  scheduledDate?: Date;
+  completedDate?: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PreventiveMaintenance {
+  id: string;
+  venueId: string;
+  venueName: string;
+  title: string;
+  description: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  lastPerformed?: Date;
+  nextScheduled: Date;
+  assignedTo?: string;
+  assignedToName?: string;
+  checklist: string[];
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export interface VenueEvaluationDetailed {
+  id: string;
+  bookingId: string;
+  venueId: string;
+  venueName: string;
+  userId: string;
+  userName: string;
+  ratings: {
+    cleanliness: number;
+    equipment: number;
+    lighting: number;
+    safety: number;
+    overall: number;
+  };
+  comment?: string;
+  photos?: string[];
+  createdAt: Date;
+}
+
+export interface VenueQualityMetrics {
+  venueId: string;
+  venueName: string;
+  averageRatings: {
+    cleanliness: number;
+    equipment: number;
+    lighting: number;
+    safety: number;
+    overall: number;
+  };
+  totalEvaluations: number;
+  lastEvaluated?: Date;
 }
 
 // Dashboard KPIs
@@ -203,4 +283,16 @@ export interface University {
   nameFa: string;
   city: string;
   province: string;
+  regionId: RegionId;
+}
+
+// Dashboard activity feed
+export interface ActivityItem {
+  id: string;
+  type: 'booking' | 'maintenance' | 'evaluation' | 'venue';
+  title: string;
+  description: string;
+  timestamp: Date;
+  universityId?: string;
+  regionId?: RegionId;
 }

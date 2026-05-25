@@ -46,6 +46,13 @@ import { BookingForm } from "@/components/bookings/booking-form";
 import { MyBookings } from "@/components/bookings/my-bookings";
 import { mockBookings, mockVenues } from "@/lib/mock-data";
 import { Booking, Venue } from "@/lib/types";
+import { useUser } from "@/providers/user-provider";
+import {
+  filterBookingsByRole,
+  filterVenuesByRole,
+  isStudentRole,
+} from "@/lib/role-utils";
+import { mockUniversities } from "@/lib/mock-data";
 import {
   formatPersianDate,
   formatPersianTime,
@@ -94,8 +101,22 @@ const purposeLabels: Record<string, string> = {
 };
 
 export default function BookingsPage() {
-  const [bookings, setBookings] = React.useState<Booking[]>(mockBookings);
-  const [venues] = React.useState<Venue[]>(mockVenues);
+  const { user } = useUser();
+  const scopedBookings = React.useMemo(
+    () => filterBookingsByRole(mockBookings, user),
+    [user]
+  );
+  const scopedVenues = React.useMemo(
+    () => filterVenuesByRole(mockVenues, user, mockUniversities),
+    [user]
+  );
+  const [bookings, setBookings] = React.useState<Booking[]>(scopedBookings);
+  const [venues] = React.useState<Venue[]>(scopedVenues);
+  const isStudent = isStudentRole(user.role);
+
+  React.useEffect(() => {
+    setBookings(scopedBookings);
+  }, [scopedBookings]);
   const [isNewBookingOpen, setIsNewBookingOpen] = React.useState(false);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = React.useState(false);
   const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(null);
@@ -136,8 +157,8 @@ export default function BookingsPage() {
       venueId: data.venueId,
       venueName: venue?.nameFa || "",
       venueType: venue?.type,
-      userId: "current-user",
-      userName: "کاربر فعلی",
+      userId: user.id,
+      userName: user.name,
       userEmail: "user@example.com",
       userPhone: "09123456789",
       universityId: venue?.universityId,
@@ -193,9 +214,13 @@ export default function BookingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">مدیریت رزرو</h1>
+            <h1 className="text-3xl font-bold">
+              {isStudent ? "رزرو سالن ورزشی" : "مدیریت رزرو"}
+            </h1>
             <p className="text-muted-foreground mt-1">
-              رزرو سالن‌های ورزشی و مشاهده وضعیت درخواست‌ها
+              {isStudent
+                ? "ثبت درخواست رزرو و پیگیری وضعیت رزروهای شخصی"
+                : "رزرو سالن‌های ورزشی و مشاهده وضعیت درخواست‌ها"}
             </p>
           </div>
           <Button onClick={() => setIsNewBookingOpen(true)} size="lg">
@@ -205,6 +230,7 @@ export default function BookingsPage() {
         </div>
 
         {/* Statistics Cards */}
+        {!isStudent && (
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -254,20 +280,24 @@ export default function BookingsPage() {
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* Main Content */}
-        <Tabs defaultValue="calendar" className="space-y-4">
+        <Tabs defaultValue={isStudent ? "my-bookings" : "calendar"} className="space-y-4">
           <TabsList>
+            {!isStudent && (
             <TabsTrigger value="calendar" className="gap-2">
               <CalendarIcon className="h-4 w-4" />
               تقویم رزرو
             </TabsTrigger>
+            )}
             <TabsTrigger value="my-bookings" className="gap-2">
               <List className="h-4 w-4" />
               رزروهای من
             </TabsTrigger>
           </TabsList>
 
+          {!isStudent && (
           <TabsContent value="calendar" className="space-y-4">
             <Card>
               <CardHeader>
@@ -311,6 +341,7 @@ export default function BookingsPage() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           <TabsContent value="my-bookings" className="space-y-4">
             <MyBookings

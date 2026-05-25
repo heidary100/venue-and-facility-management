@@ -1,3 +1,5 @@
+# ⚠️ DEPRECATED → See [docs/PHASE2-DOCUMENTATION.md](./docs/PHASE2-DOCUMENTATION.md) § 7
+
 # University Sports Venue Management System - Phase 2
 
 سامانه جامع مدیریت اماکن و تأسیسات ورزشی دانشگاه‌های کشور
