@@ -1,237 +1,313 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockVenues, toPersianDigits } from "@/lib/mock-data";
 import {
-  MapPin,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MapFilters } from "@/components/map/map-filters";
+import { BookingForm } from "@/components/bookings/booking-form";
+import { mockVenues, mockUniversities, mockBookings } from "@/lib/mock-data";
+import { Venue, VenueType, VenueStatus } from "@/lib/types";
+import { filterVenues, generateHeatmapData } from "@/lib/map-utils";
+import {
+  Map,
   Layers,
-  Navigation,
-  ZoomIn,
-  ZoomOut,
-  Locate,
+  MapPin,
+  TrendingUp,
   Building2,
-  Filter,
+  Activity,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { VenueStatus, VenueType } from "@/lib/types";
+import { toPersianDigits } from "@/lib/booking-utils";
+import { toast } from "sonner";
 
-const statusConfig: Record<VenueStatus, { label: string; color: string }> = {
-  active: { label: "فعال", color: "#22c55e" },
-  maintenance: { label: "در حال تعمیر", color: "#eab308" },
-  closed: { label: "بسته", color: "#ef4444" },
-  reserved: { label: "رزرو شده", color: "#3b82f6" },
-};
-
-const typeLabels: Record<VenueType, string> = {
-  stadium: "استادیوم",
-  gym: "سالن ورزشی",
-  pool: "استخر",
-  court: "زمین بازی",
-  field: "چمن",
-  track: "پیست",
-  arena: "آرنا",
-  other: "سایر",
-};
-
-// Placeholder map component - in production, integrate with Leaflet/OpenStreetMap
-function MapPlaceholder() {
-  const [selectedVenue, setSelectedVenue] = React.useState<string | null>(null);
-
-  return (
-    <div className="relative w-full h-full bg-secondary/20 rounded-lg overflow-hidden">
-      {/* Map Background Pattern */}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, var(--border) 1px, transparent 1px),
-            linear-gradient(to bottom, var(--border) 1px, transparent 1px)
-          `,
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      {/* Map Placeholder Content */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center p-6">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-            <MapPin className="h-10 w-10 text-primary" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">نقشه اماکن ورزشی</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            برای استفاده از نقشه، Leaflet یا OpenStreetMap را یکپارچه کنید
-          </p>
-          <Badge variant="outline">در حال توسعه</Badge>
+// Dynamic import to avoid SSR issues with Leaflet
+const VenueMap = dynamic(
+  () => import("@/components/map/venue-map").then((mod) => mod.VenueMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg border border-border">
+        <div className="text-center space-y-4">
+          <Map className="h-12 w-12 mx-auto text-muted-foreground animate-pulse" />
+          <p className="text-muted-foreground">در حال بارگذاری نقشه...</p>
         </div>
       </div>
-
-      {/* Venue Markers (Simulated) */}
-      <div className="absolute inset-0 pointer-events-none">
-        {mockVenues.map((venue, index) => {
-          const offsetX = 15 + (index * 12) % 70;
-          const offsetY = 20 + (index * 15) % 60;
-          const status = statusConfig[venue.status];
-
-          return (
-            <div
-              key={venue.id}
-              className="absolute pointer-events-auto cursor-pointer group"
-              style={{ left: `${offsetX}%`, top: `${offsetY}%` }}
-              onClick={() => setSelectedVenue(venue.id)}
-            >
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110",
-                  selectedVenue === venue.id && "ring-2 ring-primary ring-offset-2"
-                )}
-                style={{ backgroundColor: status.color }}
-              >
-                <Building2 className="h-4 w-4 text-white" />
-              </div>
-              {/* Tooltip */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <div className="bg-popover border border-border rounded-lg shadow-lg p-2 text-xs whitespace-nowrap">
-                  <p className="font-medium">{venue.nameFa}</p>
-                  <p className="text-muted-foreground">{venue.location.city}</p>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Map Controls */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2">
-        <Button variant="secondary" size="icon" className="h-10 w-10 shadow-lg">
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button variant="secondary" size="icon" className="h-10 w-10 shadow-lg">
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button variant="secondary" size="icon" className="h-10 w-10 shadow-lg">
-          <Locate className="h-4 w-4" />
-        </Button>
-        <Button variant="secondary" size="icon" className="h-10 w-10 shadow-lg">
-          <Layers className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Selected Venue Info */}
-      {selectedVenue && (
-        <div className="absolute bottom-4 left-4 right-4 md:left-auto md:w-80">
-          <Card>
-            <CardContent className="p-4">
-              {(() => {
-                const venue = mockVenues.find((v) => v.id === selectedVenue);
-                if (!venue) return null;
-                const status = statusConfig[venue.status];
-                return (
-                  <>
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <h4 className="font-semibold">{venue.nameFa}</h4>
-                      <Badge style={{ backgroundColor: `${status.color}20`, color: status.color }}>
-                        {status.label}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2">{venue.universityName}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-                      <MapPin className="h-3 w-3" />
-                      <span>{venue.location.addressFa}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline">{typeLabels[venue.type]}</Badge>
-                      <span className="text-sm">
-                        ظرفیت: <strong>{toPersianDigits(venue.capacity)}</strong>
-                      </span>
-                    </div>
-                    <div className="flex gap-2 mt-3">
-                      <Button size="sm" className="flex-1">مشاهده جزئیات</Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Navigation className="h-4 w-4 ml-1" />
-                        مسیریابی
-                      </Button>
-                    </div>
-                  </>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
-  );
-}
+    ),
+  }
+);
 
 export default function MapPage() {
-  const [typeFilter, setTypeFilter] = React.useState<string>("all");
-  const [statusFilter, setStatusFilter] = React.useState<string>("all");
+  const [mounted, setMounted] = React.useState(false);
+  const [venues] = React.useState<Venue[]>(mockVenues);
+  const [filteredVenues, setFilteredVenues] = React.useState<Venue[]>(mockVenues);
+  const [selectedVenue, setSelectedVenue] = React.useState<Venue | null>(null);
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = React.useState(false);
+  const [showHeatmap, setShowHeatmap] = React.useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+
+  // Filter states
+  const [filters, setFilters] = React.useState<{
+    search?: string;
+    types?: VenueType[];
+    statuses?: VenueStatus[];
+    universityIds?: string[];
+    hasAccessibility?: boolean;
+  }>({});
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Apply filters
+  React.useEffect(() => {
+    const filtered = filterVenues(venues, filters);
+    setFilteredVenues(filtered);
+  }, [venues, filters]);
+
+  const activeFiltersCount = React.useMemo(() => {
+    let count = 0;
+    if (filters.search) count++;
+    if (filters.types && filters.types.length > 0) count += filters.types.length;
+    if (filters.statuses && filters.statuses.length > 0) count += filters.statuses.length;
+    if (filters.universityIds && filters.universityIds.length > 0)
+      count += filters.universityIds.length;
+    if (filters.hasAccessibility !== undefined) count++;
+    return count;
+  }, [filters]);
+
+  const handleSearchChange = (search: string) => {
+    setFilters((prev) => ({ ...prev, search }));
+  };
+
+  const handleTypeChange = (types: VenueType[]) => {
+    setFilters((prev) => ({ ...prev, types }));
+  };
+
+  const handleStatusChange = (statuses: VenueStatus[]) => {
+    setFilters((prev) => ({ ...prev, statuses }));
+  };
+
+  const handleUniversityChange = (universityIds: string[]) => {
+    setFilters((prev) => ({ ...prev, universityIds }));
+  };
+
+  const handleAccessibilityChange = (hasAccessibility: boolean | undefined) => {
+    setFilters((prev) => ({ ...prev, hasAccessibility }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+  };
+
+  const handleVenueSelect = (venue: Venue) => {
+    setSelectedVenue(venue);
+  };
+
+  const handleBookVenue = (venue: Venue) => {
+    setSelectedVenue(venue);
+    setIsBookingDialogOpen(true);
+  };
+
+  const handleBookingSubmit = (data: any) => {
+    console.log("Booking submitted:", data);
+    setIsBookingDialogOpen(false);
+    toast.success("درخواست رزرو با موفقیت ثبت شد", {
+      description: "درخواست شما در انتظار تأیید مدیر است.",
+    });
+  };
+
+  // Statistics
+  const stats = React.useMemo(() => {
+    return {
+      total: filteredVenues.length,
+      active: filteredVenues.filter((v) => v.status === "active").length,
+      avgUtilization:
+        filteredVenues.reduce((sum, v) => sum + v.utilizationRate, 0) /
+        filteredVenues.length || 0,
+      universities: new Set(filteredVenues.map((v) => v.universityId)).size,
+    };
+  }, [filteredVenues]);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 h-[calc(100vh-10rem)]">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="space-y-4 h-[calc(100vh-8rem)]">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold">نقشه اماکن</h1>
-            <p className="text-muted-foreground">مشاهده موقعیت جغرافیایی اماکن ورزشی</p>
+            <h1 className="text-3xl font-bold">نقشه سالن‌ها</h1>
+            <p className="text-muted-foreground mt-1">
+              مشاهده و جستجوی سالن‌های ورزشی روی نقشه
+            </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="نوع مکان" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">همه انواع</SelectItem>
-                <SelectItem value="stadium">استادیوم</SelectItem>
-                <SelectItem value="gym">سالن ورزشی</SelectItem>
-                <SelectItem value="pool">استخر</SelectItem>
-                <SelectItem value="court">زمین بازی</SelectItem>
-                <SelectItem value="field">چمن</SelectItem>
-                <SelectItem value="track">پیست</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="وضعیت" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">همه وضعیت‌ها</SelectItem>
-                <SelectItem value="active">فعال</SelectItem>
-                <SelectItem value="maintenance">در حال تعمیر</SelectItem>
-                <SelectItem value="closed">بسته</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showHeatmap ? "default" : "outline"}
+              onClick={() => setShowHeatmap(!showHeatmap)}
+              className="gap-2"
+            >
+              <Activity className="h-4 w-4" />
+              نقشه حرارتی
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="gap-2 lg:hidden"
+            >
+              <Layers className="h-4 w-4" />
+              فیلترها
+            </Button>
           </div>
         </div>
 
-        {/* Map Container */}
-        <Card className="flex-1 h-[calc(100%-5rem)]">
-          <CardContent className="p-0 h-full">
-            <MapPlaceholder />
-          </CardContent>
-        </Card>
+        {/* Statistics Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    کل سالن‌ها
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {toPersianDigits(stats.total.toString())}
+                  </p>
+                </div>
+                <MapPin className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Legend */}
-        <div className="flex flex-wrap gap-4 justify-center">
-          {Object.entries(statusConfig).map(([key, value]) => (
-            <div key={key} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: value.color }} />
-              <span className="text-sm text-muted-foreground">{value.label}</span>
-            </div>
-          ))}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    سالن‌های فعال
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {toPersianDigits(stats.active.toString())}
+                  </p>
+                </div>
+                <Activity className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    میانگین استفاده
+                  </p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {toPersianDigits(Math.round(stats.avgUtilization).toString())}%
+                  </p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    دانشگاه‌ها
+                  </p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {toPersianDigits(stats.universities.toString())}
+                  </p>
+                </div>
+                <Building2 className="h-8 w-8 text-purple-600" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Map and Filters */}
+        <div className="grid lg:grid-cols-[320px_1fr] gap-4 h-[calc(100%-12rem)]">
+          {/* Filters Sidebar */}
+          <div
+            className={cn(
+              "lg:block",
+              isSidebarOpen ? "block" : "hidden"
+            )}
+          >
+            <MapFilters
+              onSearchChange={handleSearchChange}
+              onTypeChange={handleTypeChange}
+              onStatusChange={handleStatusChange}
+              onUniversityChange={handleUniversityChange}
+              onAccessibilityChange={handleAccessibilityChange}
+              universities={mockUniversities}
+              activeFiltersCount={activeFiltersCount}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+
+          {/* Map */}
+          <div className="h-full min-h-[500px]">
+            <VenueMap
+              venues={filteredVenues}
+              selectedVenueId={selectedVenue?.id}
+              onVenueSelect={handleVenueSelect}
+              onBookVenue={handleBookVenue}
+              showHeatmap={showHeatmap}
+            />
+          </div>
+        </div>
+
+        {/* Results Info */}
+        {activeFiltersCount > 0 && (
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            <span>
+              {toPersianDigits(filteredVenues.length.toString())} سالن یافت شد
+            </span>
+            {activeFiltersCount > 0 && (
+              <Badge variant="secondary">
+                {toPersianDigits(activeFiltersCount.toString())} فیلتر فعال
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Booking Dialog */}
+      <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>رزرو {selectedVenue?.nameFa}</DialogTitle>
+            <DialogDescription>
+              فرم زیر را برای ثبت درخواست رزرو تکمیل کنید
+            </DialogDescription>
+          </DialogHeader>
+          {selectedVenue && (
+            <BookingForm
+              venues={venues}
+              existingBookings={mockBookings}
+              onSubmit={handleBookingSubmit}
+              initialVenueId={selectedVenue.id}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
