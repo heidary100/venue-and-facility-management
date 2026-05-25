@@ -13,6 +13,10 @@ Phase 2 of the Comprehensive University Sports Ecosystem — **Venue Evaluation,
 | [docs/DATA-MODELS.md](./docs/DATA-MODELS.md) | Types & Prisma schema |
 | [docs/API-SPEC.md](./docs/API-SPEC.md) | REST API contracts |
 | [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Production deployment |
+| [docs/USECASES.md](./docs/USECASES.md) | Use case diagrams (Persian) |
+| [docs/STATE-DIAGRAM.md](./docs/STATE-DIAGRAM.md) | Booking state lifecycle |
+| [docs/USER-STORIES.md](./docs/USER-STORIES.md) | User stories by role |
+| [docs/BPMN.md](./docs/BPMN.md) | BPMN-style process flows |
 
 ## Quick start
 

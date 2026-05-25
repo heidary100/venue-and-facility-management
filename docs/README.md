@@ -10,6 +10,15 @@
 | [API-SPEC.md](./API-SPEC.md) | REST API contracts (OpenAPI-style) |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Production deployment guide |
 
+## Diagrams & presentation models | نمودارها
+
+| Document | Description |
+|----------|-------------|
+| [USECASES.md](./USECASES.md) | Mermaid use case diagrams — booking cycle & quality evaluation |
+| [STATE-DIAGRAM.md](./STATE-DIAGRAM.md) | Booking state machine (pending → completed) |
+| [USER-STORIES.md](./USER-STORIES.md) | Persian user stories grouped by role |
+| [BPMN.md](./BPMN.md) | BPMN-style flows for reservation and evaluation |
+
 ## Legacy files (superseded)
 
 The following root-level files are **deprecated**; content has been merged into `docs/`:

@@ -363,9 +363,36 @@ pnpm start
 
 ---
 
-## 11. Integration Points | نقاط یکپارچه‌سازی
+## 11. Diagrams & Visual Models | نمودارها و مدل‌های بصری
 
-### 11.1 Phase 1 — SSO / Identity
+مدل‌های زیر برای ارائه، آنالیز و هم‌ترازی تیم توسعه تهیه شده‌اند. تمام نمودارها با **Mermaid** و برچسب‌های **فارسی** نوشته شده‌اند و در [mermaid.live](https://mermaid.live) قابل آزمایش هستند.
+
+| سند | نوع مدل | شرح کوتاه |
+|-----|---------|-----------|
+| [USECASES.md](./USECASES.md) | Use Case (×۲) | **چرخه رزرو:** دانشجو، مدیر دانشگاه، دبیر منطقه‌ای، مدیر ملی — جستجو، ثبت، تأیید/رد، گزارش. **چرخه ارزیابی:** امتیازدهی پس از استفاده و گزارش رضایت. |
+| [STATE-DIAGRAM.md](./STATE-DIAGRAM.md) | State Diagram | چرخه حیات **رزرو:** در انتظار → تأیید → فعال → تکمیل؛ مسیرهای رد و لغو با یادداشت پیاده‌سازی. |
+| [USER-STORIES.md](./USER-STORIES.md) | User Stories | ۱۲ داستان کاربری با قالب `As a [نقش], I want to [فعالیت], so that [فایده]` برای نقش‌های اصلی. |
+| [BPMN.md](./BPMN.md) | BPMN-style Flow (×۲) | **فرآیند ۱:** رزرو از SSO تا تکمیل و یادآور ارزیابی. **فرآیند ۲:** ثبت ارزیابی، تجمیع KPI، هشدار کیفیت پایین. |
+
+### 11.1 How diagrams relate to implementation
+
+```mermaid
+flowchart LR
+  UC[USECASES] --> BPMN[BPMN]
+  BPMN --> STATE[STATE-DIAGRAM]
+  STATE --> API[API-SPEC]
+  US[USER-STORIES] --> FEAT[FEATURES]
+  FEAT --> UC
+```
+
+- **رزرو:** وضعیت‌های ذخیره‌شده در `BookingStatus` (`lib/types.ts`)؛ وضعیت *فعال* مشتق از بازه زمانی است — جزئیات در [STATE-DIAGRAM.md](./STATE-DIAGRAM.md).
+- **ارزیابی:** پس از `completed`، `POST /evaluations` — [API-SPEC.md](./API-SPEC.md) § ۶.
+
+---
+
+## 12. Integration Points | نقاط یکپارچه‌سازی
+
+### 12.1 Phase 1 — SSO / Identity
 
 ```
 User → Phase 1 OIDC → JWT (roles, universityId, regionId) → Phase 2 API
@@ -374,7 +401,7 @@ User → Phase 1 OIDC → JWT (roles, universityId, regionId) → Phase 2 API
 - Map claims: `sub`, `role`, `university_id`, `region_id`
 - Frontend: replace `UserProvider` mock with session from NextAuth or custom middleware
 
-### 11.2 Future ecosystem modules
+### 12.2 Future ecosystem modules
 
 | Module | Integration |
 |--------|-------------|
@@ -384,9 +411,9 @@ User → Phase 1 OIDC → JWT (roles, universityId, regionId) → Phase 2 API
 
 ---
 
-## 12. Future Enhancements & AI Readiness | توسعه آینده و آمادگی هوش مصنوعی
+## 13. Future Enhancements & AI Readiness | توسعه آینده و آمادگی هوش مصنوعی
 
-### 12.1 Near-term backlog
+### 13.1 Near-term backlog
 
 - Email/SMS notifications on booking status
 - Recurring bookings
@@ -395,7 +422,7 @@ User → Phase 1 OIDC → JWT (roles, universityId, regionId) → Phase 2 API
 - Export PDF/Excel reports
 - Real `/users` admin module
 
-### 12.2 AI readiness
+### 13.2 AI readiness
 
 | Use case | Data required | Endpoint sketch |
 |----------|---------------|-----------------|
@@ -428,6 +455,10 @@ Prepare by logging structured events (`ActivityItem`, audit log) and maintaining
 - [DATA-MODELS.md](./DATA-MODELS.md)
 - [API-SPEC.md](./API-SPEC.md)
 - [DEPLOYMENT.md](./DEPLOYMENT.md)
+- [USECASES.md](./USECASES.md) — Use case diagrams (booking & evaluation)
+- [STATE-DIAGRAM.md](./STATE-DIAGRAM.md) — Booking lifecycle states
+- [USER-STORIES.md](./USER-STORIES.md) — Role-based user stories (Persian)
+- [BPMN.md](./BPMN.md) — Process flows (booking & evaluation)
 
 ---
 
